@@ -7,19 +7,23 @@ use Mojo::Base 'Mojolicious::Command';
 our $VERSION = "0.01";
 
 __PACKAGE__->attr(description => <<'EOF');
-Generate lexicon file translation.
+Generate lexicon file translations.
 EOF
 
 __PACKAGE__->attr(usage => <<"EOF");
-usage: $0 generate lexicont src_lang dest_lang
-Options:
-  -v, --verbose
+usage: $0 generate lexicont src_lang dest_lang ...
 EOF
 
 sub run {
     my $self      = shift;
+
+    if ($@ < 2){
+        print "please specify arguments";
+        exit;
+    }
+
     my $src_lang  = shift;
-    my $dest_lang = shift;
+
     my $app;
     if (ref $self->app eq 'CODE'){
         $app = $self->app->();
@@ -29,27 +33,77 @@ sub run {
     }
     my $app_class = ref $app;
     $app_class =~ s{::}{/}g;
+    my $app_klass = ref $app;
 
     my $verbose;
 
-    local @ARGV = @_ if @_;
+    my @dest_langs = @_;
 
-    my $result = GetOptions(
-        'verbose|v:1'        => \$verbose,
-    );
+    my $src_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
 
-    my $lexem_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
-
-    if (-e $lexem_file) {
+    if (-e $src_file) {
         print <<NOTFOUND;
-File not found $lexem_file
+File not found $src_file
 NOTFOUND
         return;
     }
 
+    my %srclex = eval {
+        require "$app_class/I18N/${src_lang}.pm";
+        no strict 'refs';
+        %{*{"${app_class}::I18N::${src_lang}::Lexicon"}};
+    };
+
+    for my $dest_lang (@dest_langs){
+
+        my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
+        
+        my %lexicon = map { $_ => _translate( $srclex{$_}, $dest_lang) } keys %srclex;
+
+        # Output lexem
+        $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
+            \%lexicon);
+
+    }
+
 }
 
+sub _translate{
+
+  my $src = shift;
+  my $lang = shift;
+  
+  return "dummy";
+
+}
+__DATA__
+@@ package
+% my ($app_class, $language, $lexicon) = @_;
+package <%= $app_class %>::I18N::<%= $language %>;
+use base '<%= $app_class %>::I18N';
+use utf8;
+
+our %Lexicon = (
+% foreach my $lexem (sort keys %$lexicon) {
+    % my $data = $lexicon->{$lexem} || '';
+    % $lexem=~s/'/\\'/g;
+    % utf8::encode $data;
+    % $data =~s/'/\\'/g;
+    % if( $data =~ s/\n/\\n/g ){
+    %   $data = '"' . $data . '"';
+    % } else {
+    %   $data = "'${data}'";
+    % }
+    % unless ($lexem=~s/\n/\\n/g) {
+    '<%= $lexem %>' => <%= $data %>,
+    % } else {
+    "<%= $lexem %>" => <%= $data %>,
+    % };
+% }
+);
+
 1;
+
 __END__
 
 =encoding utf-8
@@ -60,7 +114,7 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 
 =head1 SYNOPSIS
 
-    use Mojolicious::Command::generate::lexicont;
+    APPLICATION generate lexicont src_lang dest_lang ...
 
 =head1 DESCRIPTION
 
