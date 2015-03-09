@@ -179,31 +179,38 @@ Lingua::Translate. So you can customize translation service.
 
 =head1 CONFIGURATION
 
-Create config file lingua_translate.conf on your project home directory.
+Create config file lexicont.conf on your project home directory.
 
-for example 
 
-InterTran
-
-{
-  back_end => "InterTran",
-  src_enc
-}
-
-Bing
+#InterTran
 
 {
-  back_end => "BingWrapper",
-  client_id => "YOUR_CLIENT_ID", 
-  client_secret => "YOUR_CLIENT_SECRET"
+    lingua_translate => {
+      back_end => "InterTran",
+    },
+    sleep => 5,
 }
 
-Google
+#Bing
 
 {
-  back_end => "Google",
-  apy_key  => "YOUR_API_KEY",
+    lingua_translate => {
+        back_end => "BingWrapper",
+        client_id => "YOUR_CLIENT_ID", 
+        client_secret => "YOUR_CLIENT_SECRET"
+    }
 }
+
+
+#Google
+
+{
+    lingua_translate => {
+        back_end => "Google",
+        api_key => "YOUR_API_KEY", 
+    }
+}
+
 
 =head1 LICENSE
 
