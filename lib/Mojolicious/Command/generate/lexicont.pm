@@ -6,7 +6,6 @@ use Mojo::Base 'Mojolicious::Command';
 use Lingua::Translate;
 use Config::PL;
 use Carp;
-use Data::Dumper;
 
 __PACKAGE__->attr(description => <<'EOF');
 Generate lexicon file translations.
