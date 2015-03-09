@@ -42,6 +42,8 @@
       },
       "runtime" : {
          "requires" : {
+            "Config::PL" : "0",
+            "Lingua::Translate" : "0",
             "Mojolicious" : "0",
             "perl" : "5.008005"
          }
@@ -64,5 +66,9 @@
          "web" : "https://github.com/dokechin/Mojolicious-Command-generate-lexicont"
       }
    },
-   "version" : "0.01"
+   "version" : "0.01",
+   "x_contributors" : [
+      "dokechin <user@user-PC.(none)>",
+      "dokechin <ttatsumi@ra2.so-net.ne.jp>"
+   ]
 }
