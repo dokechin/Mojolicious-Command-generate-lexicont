@@ -162,11 +162,20 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 
 =head1 SYNOPSIS
 
-    APPLICATION generate lexicont src_lang dest_lang ...
+    # Translate from English to Frenchh
+    ./script/my_app generate lexicont en fr
+    
+    # Translate from English to German, Frenchh and Russian
+    ./script/my_app generate lexicont en de fr ru
 
 =head1 DESCRIPTION
 
 Mojolicious::Command::generate::lexicont is lexicon translation generator.
+
+Mojolicious::Plugin::I18N is standard I18N module for Mojolicious.
+For example English, you must make lexicon file in the package my_app::I18N::en.
+This module is lexicon file generator from one language to specified languages using
+Lingua::Translate. So you can customize translation service.
 
 =head1 CONFIGURATION
 
@@ -174,10 +183,17 @@ Create config file lingua_translate.conf on your project home directory.
 
 for example 
 
+InterTran
+
+{
+  back_end => "InterTran",
+  src_enc
+}
+
 Bing
 
 {
-  back_end => "Bing",
+  back_end => "BingWrapper",
   client_id => "YOUR_CLIENT_ID", 
   client_secret => "YOUR_CLIENT_SECRET"
 }
