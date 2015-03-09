@@ -14,7 +14,7 @@ use lib "$FindBin::Bin/lib";
 
 use_ok 'Mojolicious::Command::generate::lexicont';
 
-my $conf_file = "$FindBin::Bin/lingua_translate.error.conf";
+my $conf_file = "$FindBin::Bin/lexicont.error.conf";
 
 my $l = new_ok 'Mojolicious::Command::generate::lexicont', [conf_file=>$conf_file];
 

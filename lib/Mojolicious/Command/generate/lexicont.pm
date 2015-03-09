@@ -65,7 +65,7 @@ NOTFOUND
         croak( "error $@" );
     }
 
-    my $conf_file = $self->conf_file || "lingua_translate.conf";
+    my $conf_file = $self->conf_file || "lexicont.conf";
     my $conf;
     eval{
         $conf = config_do $conf_file;
@@ -101,7 +101,7 @@ sub translate{
     my $xl8r;
 
     eval{
-        $xl8r  = Lingua::Translate->new(%{$self->conf}, src => $src, dest => $dest);
+        $xl8r  = Lingua::Translate->new(%{$self->conf->{lingua_translate}}, src => $src, dest => $dest);
     };
     if ($@){
         croak "Lingua::Translate create error $@";
@@ -111,8 +111,8 @@ sub translate{
 
     eval{
         $trans_text = $xl8r->translate($text);
-        if ($self->conf->{back_end} eq "InterTran"){
-            sleep(5);
+        if (defined $self->conf->{sleep}){
+            sleep( $self->conf->{sleep} );
         }
     };
     if ($@){

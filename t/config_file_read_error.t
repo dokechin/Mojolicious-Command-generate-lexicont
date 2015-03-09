@@ -15,7 +15,6 @@ use lib "$FindBin::Bin/lib";
 
 use_ok 'Mojolicious::Command::generate::lexicont';
 
-my $conf_file = "$FindBin::Bin/lingua.translate.test.conf";
 my $l = new_ok 'Mojolicious::Command::generate::lexicont', [conf_file=>"@@@@@"];
 
 $l->quiet(1);
