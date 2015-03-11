@@ -6,6 +6,7 @@ use Mojo::Base 'Mojolicious::Command';
 use Lingua::Translate;
 use Config::PL;
 use Carp;
+use Encode qw/decode/;
 
 __PACKAGE__->attr(description => <<'EOF');
 Generate lexicon file translations.
@@ -72,20 +73,68 @@ NOTFOUND
     if ($@){
         croak "Config file cannot read $@ ($conf_file)"
     }
-    
+
     $self->conf($conf);
+    
+    my $ori_file = $app->home->rel_file("lib/$app_class/I18N/ori.pm");
 
-    for my $dest_lang (@dest_langs){
+    if (-e $ori_file) {
 
-        my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
+        my %orilex = eval {
+            require "$app_class/I18N/ori.pm";
+            no strict 'refs';
+            %{*{"${app_klass}::I18N::ori::Lexicon"}};
+        };            
+        if ($@){
+            croak( "error $@" );
+        }
 
-        my %lexicon = map { $_ => $self->translate( $src_lang, $dest_lang, $srclex{$_}) } keys %srclex;
+        my %changes = ();
         
+        for my $key (%orilex){
+            if ( defined $srclex{$key} && ($orilex{$key} ne $srclex{$key})){ 
+                $changes{$key} = 1;
+            }
+        }
 
-        # Output lexem
-        $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
-            \%lexicon);
+        for my $dest_lang (@dest_langs){
 
+            my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
+
+            my %lexicon = ();
+
+            for my $key (keys %orilex){
+                if ( ! defined $srclex{$key} || $changes{$key} == 1){ 
+                    $lexicon{$key} = $self->translate( $src_lang, $dest_lang, $orilex{$key});
+                }
+            }
+
+            # Output lexem
+            $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
+                \%lexicon);
+
+        }
+
+        my %utf8_orilex = map { $_ => decode("utf8", $orilex{$_})} keys %orilex;
+        my $src_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
+        $self->render_to_file('package', $src_file, $app_klass, $src_lang,
+                \%utf8_orilex);
+
+    }
+    else{
+
+        for my $dest_lang (@dest_langs){
+
+            my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
+
+            my %lexicon = map { $_ => $self->translate( $src_lang, $dest_lang, $srclex{$_}) } keys %srclex;
+            
+
+            # Output lexem
+            $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
+                \%lexicon);
+
+        }
     }
 
 }
@@ -161,10 +210,16 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 
 =head1 SYNOPSIS
 
-    # Translate from English to Frenchh
+    # You write en.pm and generate fr.pm
+    # All the lexicon described in en.pm will translate.
     ./script/my_app generate lexicont en fr
     
-    # Translate from English to German, Frenchh and Russian
+    # You write en.pm and generate de.pm, fr.pm and ru.pm.
+    # All the lexicon described in en.pm will translate.
+    ./script/my_app generate lexicont en de fr ru
+
+    # You write ori.pm and generate en.pm, de.pm, fr.pm and ru.pm.
+    # Difference between ori.pm and en.pm will translate.
     ./script/my_app generate lexicont en de fr ru
 
 =head1 DESCRIPTION
@@ -172,9 +227,12 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 Mojolicious::Command::generate::lexicont is lexicon translation generator.
 
 Mojolicious::Plugin::I18N is standard I18N module for Mojolicious.
-For example English, you must make lexicon file in the package my_app::I18N::en.
+For example English, you must make lexicon file in the package Myapp::I18N::en.
 This module is lexicon file generator from one language to specified languages using
 Lingua::Translate. So you can customize translation service.
+
+It is not convinient every time all the lexicons are translated.
+Write the lexicon in the package Myapp::I18N::ori, and generate only difference parts.
 
 =head1 CONFIGURATION
 
@@ -209,6 +267,8 @@ Create config file lexicont.conf on your project home directory.
         api_key => "YOUR_API_KEY", 
     }
 }
+
+
 
 
 =head1 LICENSE
