@@ -4,11 +4,17 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 
 # SYNOPSIS
 
-    # Translate from English to Frenchh
+    # You write en.pm and generate fr.pm
+    # All the lexicon described in en.pm will translate.
     ./script/my_app generate lexicont en fr
     
 
-    # Translate from English to German, Frenchh and Russian
+    # You write en.pm and generate de.pm, fr.pm and ru.pm.
+    # All the lexicon described in en.pm will translate.
+    ./script/my_app generate lexicont en de fr ru
+
+    # You write org.pm and generate en.pm, de.pm, fr.pm and ru.pm.
+    # Difference between org.pm and en.pm will translate.
     ./script/my_app generate lexicont en de fr ru
 
 # DESCRIPTION
@@ -16,9 +22,12 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 Mojolicious::Command::generate::lexicont is lexicon translation generator.
 
 Mojolicious::Plugin::I18N is standard I18N module for Mojolicious.
-For example English, you must make lexicon file in the package my\_app::I18N::en.
+For example English, you must make lexicon file in the package Myapp::I18N::en.
 This module is lexicon file generator from one language to specified languages using
 Lingua::Translate. So you can customize translation service.
+
+It is not convenient every time all the lexicons are translated.
+Write the lexicon in the package Myapp::I18N::org, and generate only difference parts.
 
 # CONFIGURATION
 
@@ -55,6 +64,10 @@ Create config file lexicont.conf on your project home directory.
         api\_key => "YOUR\_API\_KEY", 
     }
 }
+
+
+
+
 
 
 

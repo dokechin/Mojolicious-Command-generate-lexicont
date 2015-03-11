@@ -44,7 +44,7 @@ require_ok "$FindBin::Bin/lib/Lexemes2/I18N/zh.pm";
 is_deeply \%Lexemes2::I18N::zh::Lexicon,
   {'key2' => '日本', key3 =>'英语'}, 'correct chinese';
 
-#unlink "$FindBin::Bin/lib/Lexemes2/I18N/ja.pm";
+unlink "$FindBin::Bin/lib/Lexemes2/I18N/ja.pm";
 unlink "$FindBin::Bin/lib/Lexemes2/I18N/en.pm";
 unlink "$FindBin::Bin/lib/Lexemes2/I18N/es.pm";
 unlink "$FindBin::Bin/lib/Lexemes2/I18N/zh.pm";
