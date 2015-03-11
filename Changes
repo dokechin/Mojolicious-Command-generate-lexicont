@@ -2,6 +2,10 @@ Revision history for Perl extension Mojolicious-Command-generate-lexicont
 
 {{$NEXT}}
 
+0.02 2015-03-11T22:43:55Z
+
+    - support org.pm
+
 0.01 2015-03-09T12:37:39Z
 
     - original version
