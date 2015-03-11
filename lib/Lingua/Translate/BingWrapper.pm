@@ -12,7 +12,9 @@ sub new {
     my $self = bless {
         src               => $args{src},
         dest              => $args{dest},
-        parent            => Lingua::Translate::Bing->new(),
+        parent            => Lingua::Translate::Bing->new(
+          client_id => $args{client_id}, 
+          client_secret => $args{client_secret}),
     }, $class;
 
     $self;
@@ -23,7 +25,7 @@ sub translate{
     my $self = shift;
     my $text = shift;
     
-    return $self->{parent}->translate($text, $self->dest, $self->src);
+    return $self->{parent}->translate($text, $self->{dest}, $self->{src});
 }
 
 1;
