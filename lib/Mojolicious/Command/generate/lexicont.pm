@@ -131,12 +131,24 @@ NOTFOUND
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
 
+           my $dest_json = $app->home->rel_file("lib/public/${dest_lang}.json");
+
+            # Output json
+            $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
+                \%lexicon);
+
         }
 
         my %utf8_orglex = map { $_ => (utf8::is_utf8 ($orglex{$_})) ? $orglex{$_} : decode("utf8", $orglex{$_})} keys %orglex;
         my $src_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
         $self->render_to_file('package', $src_file, $app_klass, $src_lang,
                 \%utf8_orglex);
+
+        my $dest_json = $app->home->rel_file("lib/public/${src_lang}.json");
+
+        # Output json
+        $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
+            \%utf8_orglex);
 
     }
     else{
@@ -146,11 +158,17 @@ NOTFOUND
             my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
 
             my %lexicon = map { $_ => $self->translate( $src_lang, $dest_lang, $srclex{$_}) } keys %srclex;
-            
 
             # Output lexem
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
+
+            my $dest_json = $app->home->rel_file("lib/public/${dest_lang}.json");
+
+            # Output json
+            $self->render_to_file('json', $dest_file, $app_klass, $dest_lang,
+                \%lexicon);
+            
 
         }
     }
@@ -215,6 +233,31 @@ our %Lexicon = (
     % };
 % }
 );
+
+1;
+
+@@ json
+% my ($app_class, $language, $lexicon) = @_;
+{
+% my $first = 0;
+% foreach my $lexem (sort keys %$lexicon) {
+    %= ($first++ == 0) "" : "," 
+    % my $data = $lexicon->{$lexem} || '';
+    % $lexem=~s/'/\\'/g;
+    % utf8::encode $data;
+    % $data =~s/'/\\'/g;
+    % if( $data =~ s/\n/\\n/g ){
+    %   $data = '"' . $data . '"';
+    % } else {
+    %   $data = "'${data}'";
+    % }
+    % unless ($lexem=~s/\n/\\n/g) {
+    '<%= $lexem %>' : <%= $data %>
+    % } else {
+    "<%= $lexem %>" : <%= $data %>
+    % };
+% }
+}
 
 1;
 
