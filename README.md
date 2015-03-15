@@ -29,11 +29,12 @@ Lingua::Translate. So you can customize translation service.
 It is not convenient every time all the lexicons are translated.
 Write the lexicon in the package Myapp::I18N::org, and generate only difference parts.
 
+Support front end JavaScript lexicon library l10n.js <https://github.com/eligrey/l10n.js/>
+If you want to generate a lexicon file of l10n.js , please attach a json option in the configuration file.
+
 # CONFIGURATION
 
 Create config file lexicont.conf on your project home directory.
-
-
 
 \#InterTran
 
@@ -43,6 +44,8 @@ Create config file lexicont.conf on your project home directory.
     },
     sleep => 5,
 }
+
+sleep parameter is for access interval.
 
 \#Bing
 
@@ -65,9 +68,15 @@ Create config file lexicont.conf on your project home directory.
     }
 }
 
+\#Google with JSON lexicon output
 
-
-
+{
+    lingua\_translate => {
+        back\_end => "Google",
+        api\_key => "YOUR\_API\_KEY", 
+    },
+    json => 1
+}
 
 
 

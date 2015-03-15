@@ -131,11 +131,13 @@ NOTFOUND
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
 
-           my $dest_json = $app->home->rel_file("lib/public/${dest_lang}.json");
+            if ( defined $conf->{json} && $conf->{json} == 1 ){
+                my $dest_json = $app->home->rel_file("public/${dest_lang}.json");
 
-            # Output json
-            $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
-                \%lexicon);
+                # Output json
+                $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
+                    \%lexicon);
+            }
 
         }
 
@@ -144,11 +146,15 @@ NOTFOUND
         $self->render_to_file('package', $src_file, $app_klass, $src_lang,
                 \%utf8_orglex);
 
-        my $dest_json = $app->home->rel_file("lib/public/${src_lang}.json");
+        if ( defined $conf->{json} && $conf->{json} == 1 ){
 
-        # Output json
-        $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
-            \%utf8_orglex);
+            my $dest_json = $app->home->rel_file("public/${src_lang}.json");
+
+            # Output json
+            $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
+                \%utf8_orglex);
+
+        }
 
     }
     else{
@@ -163,14 +169,27 @@ NOTFOUND
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
 
-            my $dest_json = $app->home->rel_file("lib/public/${dest_lang}.json");
+            if ( defined $conf->{json} && $conf->{json} == 1 ){
 
-            # Output json
-            $self->render_to_file('json', $dest_file, $app_klass, $dest_lang,
-                \%lexicon);
-            
+                my $dest_json = $app->home->rel_file("public/${dest_lang}.json");
+
+                # Output json
+                $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
+                    \%lexicon);
+            }
 
         }
+
+        if ( defined $conf->{json} && $conf->{json} == 1 ){
+
+            my $dest_json = $app->home->rel_file("public/${src_lang}.json");
+
+            # Output json
+            $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
+                \%srclex);
+
+        }
+
     }
 
 }
@@ -241,26 +260,23 @@ our %Lexicon = (
 {
 % my $first = 0;
 % foreach my $lexem (sort keys %$lexicon) {
-    %= ($first++ == 0) "" : "," 
+    %= ($first++ == 0)? "" : "," 
     % my $data = $lexicon->{$lexem} || '';
-    % $lexem=~s/'/\\'/g;
+    % $lexem=~s/"/\\"/g;
     % utf8::encode $data;
-    % $data =~s/'/\\'/g;
+    % $data =~s/"/\\"/g;
     % if( $data =~ s/\n/\\n/g ){
     %   $data = '"' . $data . '"';
     % } else {
-    %   $data = "'${data}'";
+    %   $data = "\"${data}\"";
     % }
     % unless ($lexem=~s/\n/\\n/g) {
-    '<%= $lexem %>' : <%= $data %>
+    "<%= $lexem %>" : <%= $data %>
     % } else {
     "<%= $lexem %>" : <%= $data %>
     % };
 % }
 }
-
-1;
-
 __END__
 
 =encoding utf-8
@@ -295,10 +311,12 @@ Lingua::Translate. So you can customize translation service.
 It is not convenient every time all the lexicons are translated.
 Write the lexicon in the package Myapp::I18N::org, and generate only difference parts.
 
+Support front end JavaScript lexicon library l10n.js <https://github.com/eligrey/l10n.js/>
+If you want to generate a lexicon file of l10n.js , please attach a json option in the configuration file.
+
 =head1 CONFIGURATION
 
 Create config file lexicont.conf on your project home directory.
-
 
 #InterTran
 
@@ -308,6 +326,8 @@ Create config file lexicont.conf on your project home directory.
     },
     sleep => 5,
 }
+
+sleep parameter is for access interval.
 
 #Bing
 
@@ -329,7 +349,15 @@ Create config file lexicont.conf on your project home directory.
     }
 }
 
+#Google with JSON lexicon output
 
+{
+    lingua_translate => {
+        back_end => "Google",
+        api_key => "YOUR_API_KEY", 
+    },
+    json => 1
+}
 
 
 =head1 LICENSE
