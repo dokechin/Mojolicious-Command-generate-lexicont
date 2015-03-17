@@ -27,8 +27,8 @@ my $file = "$FindBin::Bin/public/ja.json";
 
 my $data = decode_json(_get_content($file));
 
-is ($data->{key1} , "“ú–{Œê" , "ja json key1");
-is ($data->{key2} , "‰pŒê" , "ja json key2");
+is ($data->{key1} , "æ—¥æœ¬èªž" , "ja json key1");
+is ($data->{key2} , "è‹±èªž" , "ja json key2");
 
 $file = "$FindBin::Bin/public/en.json";
 
@@ -37,10 +37,9 @@ $data = decode_json(_get_content($file));
 is ($data->{key1} , "Japanese" , "en json key1");
 is ($data->{key2} , "English" , "en json key2");
 
-unlink "$FindBin::Bin/lib/Lexemes/I18N/ja.pm";
 unlink "$FindBin::Bin/lib/Lexemes/I18N/en.pm";
-unlink "$FindBin::Bin/oublic/ja.json";
-unlink "$FindBin::Bin/oublic/en.json";
+#unlink "$FindBin::Bin/oublic/ja.json";
+#unlink "$FindBin::Bin/oublic/en.json";
 
 sub _get_content {
   my $file = shift;

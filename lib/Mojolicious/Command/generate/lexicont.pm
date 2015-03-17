@@ -19,7 +19,7 @@ EOF
 __PACKAGE__->attr('conf_file');
 __PACKAGE__->attr('conf');
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 
 sub run {
@@ -184,9 +184,11 @@ NOTFOUND
 
             my $dest_json = $app->home->rel_file("public/${src_lang}.json");
 
+            my %utf8_srclex = map { $_ => (utf8::is_utf8 ($srclex{$_})) ? $srclex{$_} : decode("utf8", $srclex{$_})} keys %srclex;
+
             # Output json
             $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
-                \%srclex);
+                \%utf8_srclex);
 
         }
 
