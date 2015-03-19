@@ -2,6 +2,10 @@ Revision history for Perl extension Mojolicious-Command-generate-lexicont
 
 {{$NEXT}}
 
+0.04 2015-03-19T22:45:05Z
+
+    - remove Lingua::Translate dependency
+
 0.03 2015-03-17T11:08:31Z
 
     - support json  
