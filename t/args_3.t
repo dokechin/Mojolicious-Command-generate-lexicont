@@ -40,3 +40,6 @@ is_deeply \%Lexemes::I18N::zh::Lexicon,
 unlink "$FindBin::Bin/lib/Lexemes/I18N/en.pm";
 unlink "$FindBin::Bin/lib/Lexemes/I18N/es.pm";
 unlink "$FindBin::Bin/lib/Lexemes/I18N/zh.pm";
+unlink "$FindBin::Bin/public/en.pm";
+unlink "$FindBin::Bin/public/es.pm";
+unlink "$FindBin::Bin/public/zh.pm";

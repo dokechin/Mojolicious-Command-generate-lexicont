@@ -19,7 +19,7 @@ EOF
 __PACKAGE__->attr('conf_file');
 __PACKAGE__->attr('conf');
 
-our $VERSION = "0.01";
+our $VERSION = "0.03";
 
 
 sub run {
@@ -49,20 +49,25 @@ sub run {
     my @dest_langs = @_;
 
     my $src_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
+    my $org_file = $app->home->rel_file("lib/$app_class/I18N/org.pm");
 
-    if (! -e $src_file) {
+    if ( ! -e $org_file && ! -e $src_file) {
         croak <<NOTFOUND;
 Src lexicon not found $src_file
 NOTFOUND
     }
 
-    my %srclex = eval {
-        require "$app_class/I18N/${src_lang}.pm";
-        no strict 'refs';
-        %{*{"${app_klass}::I18N::${src_lang}::Lexicon"}};
-    };            
-    if ($@){
-        croak( "error $@" );
+    my %srclex = ();
+    
+    if (-e $src_file){
+        %srclex = eval {
+            require "$app_class/I18N/${src_lang}.pm";
+            no strict 'refs';
+            %{*{"${app_klass}::I18N::${src_lang}::Lexicon"}};
+        };            
+        if ($@){
+            croak( "error $@" );
+        }
     }
 
     my $conf_file = $self->conf_file || "lexicont.conf";
@@ -75,15 +80,13 @@ NOTFOUND
     }
 
     $self->conf($conf);
-    
-    my $ori_file = $app->home->rel_file("lib/$app_class/I18N/ori.pm");
 
-    if (-e $ori_file) {
+    if (-e $org_file) {
 
-        my %orilex = eval {
-            require "$app_class/I18N/ori.pm";
+        my %orglex = eval {
+            require "$app_class/I18N/org.pm";
             no strict 'refs';
-            %{*{"${app_klass}::I18N::ori::Lexicon"}};
+            %{*{"${app_klass}::I18N::org::Lexicon"}};
         };            
         if ($@){
             croak( "error $@" );
@@ -91,8 +94,8 @@ NOTFOUND
 
         my %changes = ();
         
-        for my $key (%orilex){
-            if ( defined $srclex{$key} && ($orilex{$key} ne $srclex{$key})){ 
+        for my $key (%orglex){
+            if ( defined $srclex{$key} && ($orglex{$key} ne $srclex{$key})){ 
                 $changes{$key} = 1;
             }
         }
@@ -101,11 +104,26 @@ NOTFOUND
 
             my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
 
+            my %destlex = ();
+            if ( -e $dest_file){
+                %destlex = eval {
+                    require "$app_class/I18N/${dest_lang}.pm";
+                    no strict 'refs';
+                    %{*{"${app_klass}::I18N::${dest_lang}::Lexicon"}};
+                };            
+                if ($@){
+                    croak( "error $@" );
+                }
+            }
+
             my %lexicon = ();
 
-            for my $key (keys %orilex){
-                if ( ! defined $srclex{$key} || $changes{$key} == 1){ 
-                    $lexicon{$key} = $self->translate( $src_lang, $dest_lang, $orilex{$key});
+            for my $key (keys %orglex){
+                if ( ! defined $srclex{$key} || (defined $changes{$key} && $changes{$key} == 1)){ 
+                    $lexicon{$key} = $self->translate( $src_lang, $dest_lang, $orglex{$key});
+                }
+                else{
+                    $lexicon{$key} = $destlex{$key};
                 }
             }
 
@@ -113,12 +131,30 @@ NOTFOUND
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
 
+            if ( defined $conf->{json} && $conf->{json} == 1 ){
+                my $dest_json = $app->home->rel_file("public/${dest_lang}.json");
+
+                # Output json
+                $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
+                    \%lexicon);
+            }
+
         }
 
-        my %utf8_orilex = map { $_ => decode("utf8", $orilex{$_})} keys %orilex;
+        my %utf8_orglex = map { $_ => (utf8::is_utf8 ($orglex{$_})) ? $orglex{$_} : decode("utf8", $orglex{$_})} keys %orglex;
         my $src_file = $app->home->rel_file("lib/$app_class/I18N/${src_lang}.pm");
         $self->render_to_file('package', $src_file, $app_klass, $src_lang,
-                \%utf8_orilex);
+                \%utf8_orglex);
+
+        if ( defined $conf->{json} && $conf->{json} == 1 ){
+
+            my $dest_json = $app->home->rel_file("public/${src_lang}.json");
+
+            # Output json
+            $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
+                \%utf8_orglex);
+
+        }
 
     }
     else{
@@ -128,13 +164,34 @@ NOTFOUND
             my $dest_file = $app->home->rel_file("lib/$app_class/I18N/${dest_lang}.pm");
 
             my %lexicon = map { $_ => $self->translate( $src_lang, $dest_lang, $srclex{$_}) } keys %srclex;
-            
 
             # Output lexem
             $self->render_to_file('package', $dest_file, $app_klass, $dest_lang,
                 \%lexicon);
 
+            if ( defined $conf->{json} && $conf->{json} == 1 ){
+
+                my $dest_json = $app->home->rel_file("public/${dest_lang}.json");
+
+                # Output json
+                $self->render_to_file('json', $dest_json, $app_klass, $dest_lang,
+                    \%lexicon);
+            }
+
         }
+
+        if ( defined $conf->{json} && $conf->{json} == 1 ){
+
+            my $dest_json = $app->home->rel_file("public/${src_lang}.json");
+
+            my %utf8_srclex = map { $_ => (utf8::is_utf8 ($srclex{$_})) ? $srclex{$_} : decode("utf8", $srclex{$_})} keys %srclex;
+
+            # Output json
+            $self->render_to_file('json', $dest_json, $app_klass, $src_lang,
+                \%utf8_srclex);
+
+        }
+
     }
 
 }
@@ -200,6 +257,28 @@ our %Lexicon = (
 
 1;
 
+@@ json
+% my ($app_class, $language, $lexicon) = @_;
+{
+% my $first = 0;
+% foreach my $lexem (sort keys %$lexicon) {
+    %= ($first++ == 0)? "" : "," 
+    % my $data = $lexicon->{$lexem} || '';
+    % $lexem=~s/"/\\"/g;
+    % utf8::encode $data;
+    % $data =~s/"/\\"/g;
+    % if( $data =~ s/\n/\\n/g ){
+    %   $data = '"' . $data . '"';
+    % } else {
+    %   $data = "\"${data}\"";
+    % }
+    % unless ($lexem=~s/\n/\\n/g) {
+    "<%= $lexem %>" : <%= $data %>
+    % } else {
+    "<%= $lexem %>" : <%= $data %>
+    % };
+% }
+}
 __END__
 
 =encoding utf-8
@@ -218,8 +297,8 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
     # All the lexicon described in en.pm will translate.
     ./script/my_app generate lexicont en de fr ru
 
-    # You write ori.pm and generate en.pm, de.pm, fr.pm and ru.pm.
-    # Difference between ori.pm and en.pm will translate.
+    # You write org.pm and generate en.pm, de.pm, fr.pm and ru.pm.
+    # Difference between org.pm and en.pm will translate.
     ./script/my_app generate lexicont en de fr ru
 
 =head1 DESCRIPTION
@@ -231,13 +310,15 @@ For example English, you must make lexicon file in the package Myapp::I18N::en.
 This module is lexicon file generator from one language to specified languages using
 Lingua::Translate. So you can customize translation service.
 
-It is not convinient every time all the lexicons are translated.
-Write the lexicon in the package Myapp::I18N::ori, and generate only difference parts.
+It is not convenient every time all the lexicons are translated.
+Write the lexicon in the package Myapp::I18N::org, and generate only difference parts.
+
+Support front end JavaScript lexicon library l10n.js <https://github.com/eligrey/l10n.js/>
+If you want to generate a lexicon file of l10n.js , please attach a json option in the configuration file.
 
 =head1 CONFIGURATION
 
 Create config file lexicont.conf on your project home directory.
-
 
 #InterTran
 
@@ -247,6 +328,8 @@ Create config file lexicont.conf on your project home directory.
     },
     sleep => 5,
 }
+
+sleep parameter is for access interval.
 
 #Bing
 
@@ -268,7 +351,15 @@ Create config file lexicont.conf on your project home directory.
     }
 }
 
+#Google with JSON lexicon output
 
+{
+    lingua_translate => {
+        back_end => "Google",
+        api_key => "YOUR_API_KEY", 
+    },
+    json => 1
+}
 
 
 =head1 LICENSE

@@ -1,4 +1,4 @@
-package Lexemes2::I18N::ori;
+package Lexemes2::I18N::org;
 use base 'Lexemes2::I18N';
 
 # Uncoment to use non-latin symbols
