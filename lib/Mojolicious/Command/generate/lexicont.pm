@@ -3,10 +3,10 @@ use 5.008005;
 use strict;
 use warnings;
 use Mojo::Base 'Mojolicious::Command';
-use Lingua::Translate;
 use Config::PL;
 use Carp;
 use Encode qw/decode/;
+use Module::Load;
 
 __PACKAGE__->attr(description => <<'EOF');
 Generate lexicon file translations.
@@ -206,7 +206,10 @@ sub translate{
     my $xl8r;
 
     eval{
-        $xl8r  = Lingua::Translate->new(%{$self->conf->{lingua_translate}}, src => $src, dest => $dest);
+        my $back_end = $self->conf->{lingua_translate}->{back_end};
+        my $klass = "Lingua::Translate::" . $back_end;
+        load($klass);
+        $xl8r  = $klass->new(%{$self->conf->{lingua_translate}}, src => $src, dest => $dest);
     };
     if ($@){
         croak "Lingua::Translate create error $@";
