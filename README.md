@@ -15,7 +15,9 @@ Mojolicious::Command::generate::lexicont - Mojolicious Lexicon Translation Gener
 
     # You write org.pm and generate en.pm, de.pm, fr.pm and ru.pm.
     # Difference between org.pm and en.pm will translate.
+    # This case, you must edit only org.pm.
     ./script/my_app generate lexicont en de fr ru
+
 
 # DESCRIPTION
 
